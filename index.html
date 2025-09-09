@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,30 +7,24 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
         }
-
         .container {
             max-width: 800px;
         }
-
         .button {
             transition: all 0.3s ease;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
-
         .button:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 10px -2px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-
         .button:active {
             transform: translateY(0);
         }
-
         #recording-indicator {
             width: 1rem;
             height: 1rem;
@@ -39,24 +32,14 @@
             border-radius: 50%;
             display: none;
         }
-
         @keyframes pulse {
-
-            0%,
-            100% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.2);
-            }
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
         }
-
         #recording-indicator.active {
             display: block;
             animation: pulse 1.5s infinite;
         }
-
         .loading-spinner {
             border: 4px solid rgba(0, 0, 0, 0.1);
             border-top: 4px solid #3b82f6;
@@ -65,44 +48,35 @@
             height: 2rem;
             animation: spin 1s linear infinite;
         }
-
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
-
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
     <div class="container bg-white rounded-xl shadow-2xl p-8 space-y-8">
-        <h1 class="text-4xl font-bold text-center text-gray-800">Perekam Suara & Penerjemah</h1>
-
+        <h1 class="text-4xl font-bold text-center text-gray-800">Sistem Perekam Suara & Penerjemah</h1>
+        
         <!-- Bagian Perekam -->
         <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
             <h2 class="text-2xl font-semibold mb-4 text-gray-700">Perekam Suara</h2>
             <div class="flex items-center justify-center space-x-4 mb-6">
-                <button id="recordButton"
-                    class="button bg-blue-500 text-white font-bold py-3 px-6 rounded-full text-lg hover:bg-blue-600 transition-colors duration-300">Mulai
-                    Merekam</button>
+                <button id="recordButton" class="button bg-blue-500 text-white font-bold py-3 px-6 rounded-full text-lg hover:bg-blue-600 transition-colors duration-300">Mulai Merekam</button>
                 <div id="recording-indicator"></div>
             </div>
             <p id="statusMessage" class="text-center text-gray-600 italic h-6"></p>
             <div class="mt-4">
                 <audio id="audioPlayback" class="w-full" controls style="display: none;"></audio>
+                <button id="downloadButton" class="button bg-purple-500 text-white font-bold py-2 px-4 rounded-full text-sm mt-4 w-full hover:bg-purple-600 transition-colors duration-300" style="display: none;">Unduh Rekaman</button>
             </div>
         </div>
 
         <!-- Bagian Transkripsi -->
         <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
             <h2 class="text-2xl font-semibold mb-4 text-gray-700">Hasil Transkripsi</h2>
-            <div id="transcribedText"
-                class="w-full min-h-[100px] p-4 bg-white border border-gray-300 rounded-lg text-gray-800 leading-relaxed">
+            <div id="transcribedText" class="w-full min-h-[100px] p-4 bg-white border border-gray-300 rounded-lg text-gray-800 leading-relaxed">
                 <p class="text-gray-500 italic">Teks transkripsi akan muncul di sini setelah Anda selesai merekam.</p>
             </div>
         </div>
@@ -111,8 +85,7 @@
         <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
             <h2 class="text-2xl font-semibold mb-4 text-gray-700">Terjemahkan</h2>
             <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
-                <select id="languageSelect"
-                    class="w-full md:w-1/3 p-3 rounded-lg border border-gray-300 bg-white text-gray-700">
+                <select id="languageSelect" class="w-full md:w-1/3 p-3 rounded-lg border border-gray-300 bg-white text-gray-700">
                     <option value="en">Bahasa Inggris</option>
                     <option value="id" selected>Bahasa Indonesia</option>
                     <option value="es">Bahasa Spanyol</option>
@@ -121,12 +94,9 @@
                     <option value="ja">Bahasa Jepang</option>
                     <option value="zh">Bahasa Mandarin</option>
                 </select>
-                <button id="translateButton"
-                    class="button bg-green-500 text-white font-bold py-3 px-6 rounded-full w-full md:w-2/3 hover:bg-green-600 transition-colors duration-300"
-                    disabled>Terjemahkan Teks</button>
+                <button id="translateButton" class="button bg-green-500 text-white font-bold py-3 px-6 rounded-full w-full md:w-2/3 hover:bg-green-600 transition-colors duration-300" disabled>Terjemahkan Teks</button>
             </div>
-            <div id="translatedText"
-                class="w-full min-h-[100px] p-4 mt-6 bg-white border border-gray-300 rounded-lg text-gray-800 leading-relaxed">
+            <div id="translatedText" class="w-full min-h-[100px] p-4 mt-6 bg-white border border-gray-300 rounded-lg text-gray-800 leading-relaxed">
                 <p class="text-gray-500 italic">Hasil terjemahan akan muncul di sini.</p>
             </div>
         </div>
@@ -142,12 +112,14 @@
         const translateButton = document.getElementById('translateButton');
         const statusMessage = document.getElementById('statusMessage');
         const recordingIndicator = document.getElementById('recording-indicator');
+        const downloadButton = document.getElementById('downloadButton');
 
         // Variabel untuk menyimpan status dan data
         let mediaRecorder;
         let speechRecognition;
         let isRecording = false;
         let finalTranscript = '';
+        let audioBlob;
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
@@ -161,12 +133,12 @@
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
-
+                
                 speechRecognition = new SpeechRecognition();
                 speechRecognition.lang = 'id-ID';
-                speechRecognition.continuous = true; // Terus mendengarkan
-                speechRecognition.interimResults = true; // Menampilkan hasil sementara
-
+                speechRecognition.continuous = true;
+                speechRecognition.interimResults = true;
+                
                 finalTranscript = ''; // Reset transkripsi
 
                 // Event listener untuk MediaRecorder
@@ -176,11 +148,12 @@
                 };
 
                 mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
                     const audioUrl = URL.createObjectURL(audioBlob);
                     audioPlayback.src = audioUrl;
                     audioPlayback.style.display = 'block';
-
+                    downloadButton.style.display = 'block';
+                    
                     statusMessage.textContent = 'Perekaman selesai.';
                     recordingIndicator.classList.remove('active');
                 };
@@ -221,6 +194,7 @@
                 recordButton.classList.add('bg-red-500');
                 statusMessage.textContent = 'Merekam... Silakan berbicara.';
                 recordingIndicator.classList.add('active');
+                downloadButton.style.display = 'none'; // Sembunyikan tombol unduh saat merekam
 
             } catch (err) {
                 console.error('Error saat memulai perekaman:', err);
@@ -251,13 +225,25 @@
                 startRecording();
             }
         });
+        
+        // Event listener untuk tombol unduh
+        downloadButton.addEventListener('click', () => {
+            if (audioBlob) {
+                const downloadLink = document.createElement('a');
+                downloadLink.href = URL.createObjectURL(audioBlob);
+                downloadLink.download = `rekaman-suara-${new Date().toISOString()}.wav`;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+            }
+        });
 
         // Fungsi untuk menerjemahkan teks menggunakan API
         async function translateText() {
             const textToTranslate = transcribedTextDiv.textContent.trim();
             const targetLang = languageSelect.value;
             translatedTextDiv.innerHTML = `<div class="loading-spinner mx-auto my-4"></div>`;
-
+            
             if (!textToTranslate || textToTranslate === "Teks transkripsi akan muncul di sini setelah Anda selesai merekam.") {
                 translatedTextDiv.innerHTML = `<p class="text-gray-500 italic">Tidak ada teks untuk diterjemahkan.</p>`;
                 return;
@@ -307,5 +293,4 @@
         translateButton.addEventListener('click', translateText);
     </script>
 </body>
-
 </html>
