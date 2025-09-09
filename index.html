@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Perekam Suara & Penerjemah</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .container {
+            max-width: 800px;
+        }
+
+        .button {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px -2px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        #recording-indicator {
+            width: 1rem;
+            height: 1rem;
+            background-color: #ef4444;
+            border-radius: 50%;
+            display: none;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+        }
+
+        #recording-indicator.active {
+            display: block;
+            animation: pulse 1.5s infinite;
+        }
+
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 2rem;
+            height: 2rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="container bg-white rounded-xl shadow-2xl p-8 space-y-8">
+        <h1 class="text-4xl font-bold text-center text-gray-800">Perekam Suara & Penerjemah</h1>
+
+        <!-- Bagian Perekam -->
+        <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Perekam Suara</h2>
+            <div class="flex items-center justify-center space-x-4 mb-6">
+                <button id="recordButton"
+                    class="button bg-blue-500 text-white font-bold py-3 px-6 rounded-full text-lg hover:bg-blue-600 transition-colors duration-300">Mulai
+                    Merekam</button>
+                <div id="recording-indicator"></div>
+            </div>
+            <p id="statusMessage" class="text-center text-gray-600 italic h-6"></p>
+            <div class="mt-4">
+                <audio id="audioPlayback" class="w-full" controls style="display: none;"></audio>
+            </div>
+        </div>
+
+        <!-- Bagian Transkripsi -->
+        <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Hasil Transkripsi</h2>
+            <div id="transcribedText"
+                class="w-full min-h-[100px] p-4 bg-white border border-gray-300 rounded-lg text-gray-800 leading-relaxed">
+                <p class="text-gray-500 italic">Teks transkripsi akan muncul di sini setelah Anda selesai merekam.</p>
+            </div>
+        </div>
+
+        <!-- Bagian Penerjemah -->
+        <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Terjemahkan</h2>
+            <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
+                <select id="languageSelect"
+                    class="w-full md:w-1/3 p-3 rounded-lg border border-gray-300 bg-white text-gray-700">
+                    <option value="en">Bahasa Inggris</option>
+                    <option value="id" selected>Bahasa Indonesia</option>
+                    <option value="es">Bahasa Spanyol</option>
+                    <option value="fr">Bahasa Prancis</option>
+                    <option value="de">Bahasa Jerman</option>
+                    <option value="ja">Bahasa Jepang</option>
+                    <option value="zh">Bahasa Mandarin</option>
+                </select>
+                <button id="translateButton"
+                    class="button bg-green-500 text-white font-bold py-3 px-6 rounded-full w-full md:w-2/3 hover:bg-green-600 transition-colors duration-300"
+                    disabled>Terjemahkan Teks</button>
+            </div>
+            <div id="translatedText"
+                class="w-full min-h-[100px] p-4 mt-6 bg-white border border-gray-300 rounded-lg text-gray-800 leading-relaxed">
+                <p class="text-gray-500 italic">Hasil terjemahan akan muncul di sini.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mendapatkan referensi ke elemen-elemen HTML
+        const recordButton = document.getElementById('recordButton');
+        const audioPlayback = document.getElementById('audioPlayback');
+        const transcribedTextDiv = document.getElementById('transcribedText');
+        const translatedTextDiv = document.getElementById('translatedText');
+        const languageSelect = document.getElementById('languageSelect');
+        const translateButton = document.getElementById('translateButton');
+        const statusMessage = document.getElementById('statusMessage');
+        const recordingIndicator = document.getElementById('recording-indicator');
+
+        // Variabel untuk menyimpan status dan data
+        let mediaRecorder;
+        let speechRecognition;
+        let isRecording = false;
+        let finalTranscript = '';
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            statusMessage.textContent = 'Maaf, browser Anda tidak mendukung Speech Recognition.';
+            recordButton.disabled = true;
+            translateButton.disabled = true;
+        }
+
+        // Fungsi untuk memulai perekaman dan transkripsi secara bersamaan
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+
+                speechRecognition = new SpeechRecognition();
+                speechRecognition.lang = 'id-ID';
+                speechRecognition.continuous = true; // Terus mendengarkan
+                speechRecognition.interimResults = true; // Menampilkan hasil sementara
+
+                finalTranscript = ''; // Reset transkripsi
+
+                // Event listener untuk MediaRecorder
+                let audioChunks = [];
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    audioPlayback.src = audioUrl;
+                    audioPlayback.style.display = 'block';
+
+                    statusMessage.textContent = 'Perekaman selesai.';
+                    recordingIndicator.classList.remove('active');
+                };
+
+                // Event listener untuk SpeechRecognition (transkripsi)
+                speechRecognition.onresult = (event) => {
+                    let interimTranscript = '';
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        if (event.results[i].isFinal) {
+                            finalTranscript += event.results[i][0].transcript;
+                        } else {
+                            interimTranscript += event.results[i][0].transcript;
+                        }
+                    }
+                    transcribedTextDiv.innerHTML = `<p>${finalTranscript || interimTranscript}</p>`;
+                    translateButton.disabled = false;
+                };
+
+                speechRecognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    statusMessage.textContent = 'Kesalahan transkripsi: ' + event.error;
+                };
+
+                // Event untuk menangani akhir sesi (misalnya, setelah 1 menit) dan memulai ulang
+                speechRecognition.onend = () => {
+                    if (isRecording) {
+                        speechRecognition.start(); // Mulai ulang secara otomatis
+                    }
+                };
+
+                // Mulai perekaman dan pengenalan suara
+                mediaRecorder.start();
+                speechRecognition.start();
+
+                isRecording = true;
+                recordButton.textContent = 'Berhenti Merekam';
+                recordButton.classList.remove('bg-blue-500');
+                recordButton.classList.add('bg-red-500');
+                statusMessage.textContent = 'Merekam... Silakan berbicara.';
+                recordingIndicator.classList.add('active');
+
+            } catch (err) {
+                console.error('Error saat memulai perekaman:', err);
+                statusMessage.textContent = 'Tidak dapat mengakses mikrofon. Pastikan Anda memberikan izin.';
+            }
+        }
+
+        // Fungsi untuk menghentikan perekaman
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+            if (speechRecognition) {
+                speechRecognition.stop();
+            }
+            isRecording = false;
+            recordButton.textContent = 'Mulai Merekam';
+            recordButton.classList.remove('bg-red-500');
+            recordButton.classList.add('bg-blue-500');
+            statusMessage.textContent = 'Perekaman dan transkripsi selesai.';
+        }
+
+        // Event listener untuk tombol rekam
+        recordButton.addEventListener('click', () => {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        });
+
+        // Fungsi untuk menerjemahkan teks menggunakan API
+        async function translateText() {
+            const textToTranslate = transcribedTextDiv.textContent.trim();
+            const targetLang = languageSelect.value;
+            translatedTextDiv.innerHTML = `<div class="loading-spinner mx-auto my-4"></div>`;
+
+            if (!textToTranslate || textToTranslate === "Teks transkripsi akan muncul di sini setelah Anda selesai merekam.") {
+                translatedTextDiv.innerHTML = `<p class="text-gray-500 italic">Tidak ada teks untuk diterjemahkan.</p>`;
+                return;
+            }
+
+            const payload = {
+                contents: [
+                    {
+                        parts: [
+                            { text: `Translate the following text into ${targetLang}: ${textToTranslate}` }
+                        ]
+                    }
+                ],
+                tools: [{ "google_search": {} }]
+            };
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API response was not ok: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+                const translated = candidate?.content?.parts?.[0]?.text;
+
+                if (translated) {
+                    translatedTextDiv.innerHTML = `<p>${translated}</p>`;
+                } else {
+                    translatedTextDiv.innerHTML = `<p class="text-gray-500 italic">Gagal menerjemahkan. Silakan coba lagi.</p>`;
+                }
+
+            } catch (error) {
+                console.error('Translation error:', error);
+                translatedTextDiv.innerHTML = `<p class="text-gray-500 italic">Terjadi kesalahan saat menerjemahkan. Periksa konsol untuk detail.</p>`;
+            }
+        }
+
+        // Event listener untuk tombol terjemahkan
+        translateButton.addEventListener('click', translateText);
+    </script>
+</body>
+
+</html>
