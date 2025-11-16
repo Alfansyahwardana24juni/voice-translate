@@ -1,296 +1,769 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Perekam Suara & Penerjemah</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Perekam & Penerjemah — Ungu (Mobile-first)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        :root {
+            --primary: #6366f1;
+            /* ungu elegan */
+            --accent: #7c3aed;
+            --danger: #ef4444;
+            --muted: #6b7280;
+            --bg: #f8fafc;
+            --card: #ffffff;
+        }
+
+        html,
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            height: 100%
         }
-        .container {
-            max-width: 800px;
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+            background: linear-gradient(180deg, var(--bg) 0%, #f3f4f6 100%);
+            margin: 0;
+            padding: 18px;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            min-height: 100vh;
         }
-        .button {
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+        .app {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card);
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: 0 10px 30px rgba(2, 6, 23, 0.06);
+            border: 1px solid rgba(15, 23, 42, 0.04);
         }
-        .button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 10px -2px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+        .record-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 9999px;
+            background: var(--danger);
+            opacity: 0;
+            transform: scale(1)
         }
-        .button:active {
-            transform: translateY(0);
-        }
-        #recording-indicator {
-            width: 1rem;
-            height: 1rem;
-            background-color: #ef4444;
-            border-radius: 50%;
-            display: none;
-        }
+
         @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
+            0% {
+                transform: scale(1)
+            }
+
+            50% {
+                transform: scale(1.35)
+            }
+
+            100% {
+                transform: scale(1)
+            }
         }
-        #recording-indicator.active {
-            display: block;
-            animation: pulse 1.5s infinite;
+
+        .is-recording .record-dot {
+            opacity: 1;
+            animation: pulse 1s infinite
         }
-        .loading-spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-top: 4px solid #3b82f6;
-            border-radius: 50%;
-            width: 2rem;
-            height: 2rem;
-            animation: spin 1s linear infinite;
+
+        .loading {
+            border: 4px solid rgba(0, 0, 0, 0.08);
+            border-top: 4px solid var(--primary);
+            border-radius: 9999px;
+            width: 28px;
+            height: 28px;
+            animation: spin 1s linear infinite
         }
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg)
+            }
+
+            100% {
+                transform: rotate(360deg)
+            }
+        }
+
+        .truncate-2 {
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            overflow: hidden
+        }
+
+        .btn {
+            transition: all .12s ease;
+            box-shadow: 0 6px 18px rgba(99, 102, 241, 0.08)
+        }
+
+        .btn:active {
+            transform: translateY(1px)
+        }
+
+        /* Custom Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 12px;
+        }
+
+        .modal-message {
+            color: #475569;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* responsive tweaks for desktop (wider screens keep one column but more padding) */
+        @media(min-width:768px) {
+            body {
+                padding: 28px
+            }
+
+            .app {
+                padding: 24px
+            }
         }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
-    <div class="container bg-white rounded-xl shadow-2xl p-8 space-y-8">
-        <h1 class="text-4xl font-bold text-center text-gray-800">Sistem Perekam Suara & Penerjemah</h1>
-        
-        <!-- Bagian Perekam -->
-        <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Perekam Suara</h2>
-            <div class="flex items-center justify-center space-x-4 mb-6">
-                <button id="recordButton" class="button bg-blue-500 text-white font-bold py-3 px-6 rounded-full text-lg hover:bg-blue-600 transition-colors duration-300">Mulai Merekam</button>
-                <div id="recording-indicator"></div>
+<body>
+    <main class="app" id="appRoot" role="main" aria-label="Perekam dan Penerjemah">
+        <header class="mb-4">
+            <h1 class="text-2xl font-semibold text-slate-800">Perekam Suara & Penerjemah</h1>
+            <p class="text-sm text-slate-500 mt-1">Rekaman tersimpan lokal
+                (LocalStorage).</p>
+        </header>
+
+        <!-- Recorder Card -->
+        <section class="mb-5 p-4 rounded-lg border border-gray-100 bg-white">
+            <div class="flex items-start justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-800">Perekam</h2>
+                    <p class="text-sm text-slate-500 mt-1">Tekan untuk mulai/berhenti. Rekaman otomatis disimpan ke
+                        browser.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="record-dot" id="recording-ind"></div>
+                    <div id="statusMessage" class="text-sm text-slate-500" aria-live="polite"></div>
+                </div>
             </div>
-            <p id="statusMessage" class="text-center text-gray-600 italic h-6"></p>
+
+            <div class="mt-4 flex flex-col sm:flex-row gap-3">
+                <button id="recordButton"
+                    class="btn bg-[color:var(--primary)] hover:bg-[color:var(--accent)] text-white font-semibold py-3 px-5 rounded-full w-full">
+                    <span id="recordLabel">Mulai Merekam</span>
+                </button>
+
+                <button id="stopButton"
+                    class="btn bg-gray-100 text-slate-700 font-medium py-3 px-4 rounded-full w-full hidden">Stop</button>
+
+                <button id="showSavedButton"
+                    class="btn bg-white border border-gray-200 text-slate-700 font-medium py-3 px-4 rounded-full w-full">Lihat
+                    Rekaman</button>
+            </div>
+
             <div class="mt-4">
-                <audio id="audioPlayback" class="w-full" controls style="display: none;"></audio>
-                <button id="downloadButton" class="button bg-purple-500 text-white font-bold py-2 px-4 rounded-full text-sm mt-4 w-full hover:bg-purple-600 transition-colors duration-300" style="display: none;">Unduh Rekaman</button>
+                <audio id="audioPlayback" controls class="w-full rounded-md hidden" preload="metadata"></audio>
+                <div class="mt-3 flex gap-2">
+                    <button id="downloadButton"
+                        class="btn bg-white border border-gray-200 text-slate-700 py-2 px-3 rounded w-full hidden">Unduh</button>
+                    <button id="saveLocalButton"
+                        class="btn bg-white border border-gray-200 text-slate-700 py-2 px-3 rounded w-full hidden">Simpan
+                        Lokal</button>
+                    <div style="flex:1"></div>
+                </div>
             </div>
-        </div>
 
-        <!-- Bagian Transkripsi -->
-        <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Hasil Transkripsi</h2>
-            <div id="transcribedText" class="w-full min-h-[100px] p-4 bg-white border border-gray-300 rounded-lg text-gray-800 leading-relaxed">
-                <p class="text-gray-500 italic">Teks transkripsi akan muncul di sini setelah Anda selesai merekam.</p>
+            <p class="mt-3 text-xs text-slate-500">Catatan: LocalStorage memiliki batas.</p>
+        </section>
+
+        <!-- Transkripsi Card -->
+        <section class="mb-5 p-4 rounded-lg border border-gray-100 bg-white">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-slate-800">Hasil Transkripsi</h2>
+                <button id="clearTransButton" class="text-xs text-slate-500 hover:underline">Bersihkan</button>
             </div>
-        </div>
+            <div id="transcribedText" class="mt-3 min-h-[120px] p-3 bg-gray-50 rounded text-slate-800">
+                <p class="italic text-slate-400">Teks transkripsi akan muncul di sini saat Anda merekam (jika browser
+                    mendukung SpeechRecognition).</p>
+            </div>
+        </section>
 
-        <!-- Bagian Penerjemah -->
-        <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Terjemahkan</h2>
-            <div class="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
-                <select id="languageSelect" class="w-full md:w-1/3 p-3 rounded-lg border border-gray-300 bg-white text-gray-700">
-                    <option value="en">Bahasa Inggris</option>
-                    <option value="id" selected>Bahasa Indonesia</option>
-                    <option value="es">Bahasa Spanyol</option>
-                    <option value="fr">Bahasa Prancis</option>
-                    <option value="de">Bahasa Jerman</option>
-                    <option value="ja">Bahasa Jepang</option>
-                    <option value="zh">Bahasa Mandarin</option>
+        <!-- Translate Card -->
+        <section class="mb-5 p-4 rounded-lg border border-gray-100 bg-white">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-slate-800">Terjemahkan (Argos / Google Translate Fallback)</h2>
+                <div id="translateInfo" class="text-sm text-slate-500">Source: <em>auto-detect</em></div>
+            </div>
+
+            <div class="mt-3 grid gap-3">
+                <label class="text-sm text-slate-600">Bahasa tujuan</label>
+                <select id="languageSelect" class="p-2 rounded border">
+                    <option value="en">Bahasa Inggris (en)</option>
+                    <option value="id" selected>Bahasa Indonesia (id)</option>
+                    <option value="es">Bahasa Spanyol (es)</option>
+                    <option value="fr">Bahasa Prancis (fr)</option>
+                    <option value="de">Bahasa Jerman (de)</option>
+                    <option value="ja">Bahasa Jepang (ja)</option>
+                    <option value="zh">Mandarin (zh)</option>
                 </select>
-                <button id="translateButton" class="button bg-green-500 text-white font-bold py-3 px-6 rounded-full w-full md:w-2/3 hover:bg-green-600 transition-colors duration-300" disabled>Terjemahkan Teks</button>
+
+                <div class="flex items-center gap-3">
+                    <button id="translateButton"
+                        class="btn bg-[color:var(--primary)] hover:bg-[color:var(--accent)] text-white font-semibold py-3 px-4 rounded-full flex-1"
+                        disabled>Terjemahkan Teks</button>
+                    <div id="translateLoading" class="hidden">
+                        <div class="loading" role="status" aria-hidden="true"></div>
+                    </div>
+                </div>
+
+                <div id="translatedText" class="min-h-[100px] p-3 bg-gray-50 rounded text-slate-800">
+                    <p class="italic text-slate-400">Hasil terjemahan akan muncul di sini.</p>
+                </div>
             </div>
-            <div id="translatedText" class="w-full min-h-[100px] p-4 mt-6 bg-white border border-gray-300 rounded-lg text-gray-800 leading-relaxed">
-                <p class="text-gray-500 italic">Hasil terjemahan akan muncul di sini.</p>
+        </section>
+
+        <!-- Saved recordings (modal-like area toggled) -->
+        <section id="savedPanel" class="mb-0 p-4 rounded-lg border border-gray-100 bg-white" style="display:none;">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-slate-800">Daftar Rekaman Tersimpan</h3>
+                <div class="flex items-center gap-2">
+                    <button id="exportAll" class="text-xs text-slate-500 hover:underline">Backup (.json)</button>
+                    <button id="clearAllButton"
+                        class="btn bg-[color:var(--danger)] text-white text-sm py-2 px-3 rounded">Hapus Semua</button>
+                    <button id="closeSavedBtn"
+                        class="btn bg-white border border-gray-200 text-slate-700 text-sm py-2 px-3 rounded">Tutup</button>
+                </div>
+            </div>
+
+            <div id="savedList" class="mt-4 space-y-3 text-slate-700">
+                <!-- injected -->
+            </div>
+
+            <p id="storageWarning" class="text-sm text-yellow-700 mt-3"></p>
+        </section>
+
+        <!-- Help & Info Panel -->
+        <section id="helpPanel" class="mb-0 p-4 rounded-lg border border-gray-100 bg-white" style="display:none;">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-slate-800">Bantuan & Informasi</h3>
+                <button id="closeHelpBtn" class="text-slate-500 hover:text-slate-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="space-y-4 text-sm text-slate-700">
+                <div>
+                    <h4 class="font-semibold mb-1">🚀 Cara Penggunaan</h4>
+                    <ol class="list-decimal list-inside space-y-1 text-slate-600">
+                        <li>Klik <strong>"Mulai Merekam"</strong> dan izinkan akses mikrofon.</li>
+                        <li>Ucapkan kata-kata yang ingin Anda rekam.</li>
+                        <li>Klik lagi untuk berhenti. Hasil rekaman dan transkripsi akan muncul.</li>
+                        <li>Anda bisa <strong>memutar ulang</strong>, <strong>mengunduh</strong>, atau
+                            <strong>menerjemahkan</strong> teksnya.
+                        </li>
+                        <li>Klik <strong>"Lihat Rekaman"</strong> untuk mengelola semua rekaman Anda.</li>
+                    </ol>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-1">💾 Penyimpanan Data (Penting!)</h4>
+                    <p class="text-slate-600">Semua rekaman dan transkripsi <strong>hanya tersimpan di browser
+                            ini</strong> (misal: Chrome di laptop Anda) menggunakan fitur <em>LocalStorage</em>.</p>
+                    <ul class="list-disc list-inside mt-1 space-y-1 text-slate-600">
+                        <li>Data <strong>tidak</strong> tersimpan di server atau cloud.</li>
+                        <li>Data <strong>tidak akan</strong> muncul jika Anda buka di browser lain (misal: Firefox) atau
+                            di perangkat lain (misal: HP).</li>
+                        <li>Jika Anda menghapus data browser, semua rekaman akan hilang. Gunakan tombol <strong>"Backup
+                                (.json)"</strong> untuk menyimpan salinannya.</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-1">🛠️ Fitur Lainnya</h4>
+                    <ul class="list-disc list-inside space-y-1 text-slate-600">
+                        <li><strong>Play Ulang:</strong> Dengarkan kembali rekaman suara.</li>
+                        <li><strong>Unduh Audio:</strong> Simpan rekaman sebagai file <code>.wav</code> di perangkat
+                            Anda.</li>
+                        <li><strong>Lihat Transkrip:</strong> Teks hasil percakapan otomatis tersimpan.</li>
+                        <li><strong>Terjemahan:</strong> Terjemahkan teks ke berbagai bahasa dengan cepat.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <footer class="mt-4 text-xs text-slate-500 text-center">
+            <div class="mb-2">Key LocalStorage: <code>rekamanSuara</code></div>
+            <div class="font-semibold text-slate-700">Dibuat oleh <span class="text-[color:var(--primary)]">Alvansyah
+                    Wardhana</span> — Ini adalah karya pribadi, bukan hasil tiruan atau pengambilan kode dari orang
+                lain.
+            </div>
+        </footer>
+    </main>
+
+    <!-- Custom Modal -->
+    <div id="customModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modalTitle" class="modal-title"></h3>
+            <p id="modalMessage" class="modal-message"></p>
+            <div id="modalActions" class="modal-actions">
+                <!-- Buttons will be injected here -->
             </div>
         </div>
     </div>
 
     <script>
-        // Mendapatkan referensi ke elemen-elemen HTML
+        /* ============================
+           Mobile-first single-column app
+           Theme: Ungu (#6366f1)
+           Translate: https://translate.argosopentech.com/translate (Primary)
+                      https://translate.googleapis.com/translate_a/single (Fallback)
+           LocalStorage key: rekamanSuara
+           ============================ */
+
+        const STORAGE_KEY = 'rekamanSuara';
+        const TRANSLATE_ENDPOINT = 'https://translate.argosopentech.com/translate';
+        const GOOGLE_TRANSLATE_ENDPOINT = 'https://translate.googleapis.com/translate_a/single';
+
+        // DOM
         const recordButton = document.getElementById('recordButton');
+        const recordLabel = document.getElementById('recordLabel');
+        const stopButton = document.getElementById('stopButton');
         const audioPlayback = document.getElementById('audioPlayback');
         const transcribedTextDiv = document.getElementById('transcribedText');
         const translatedTextDiv = document.getElementById('translatedText');
         const languageSelect = document.getElementById('languageSelect');
         const translateButton = document.getElementById('translateButton');
+        const translateLoading = document.getElementById('translateLoading');
         const statusMessage = document.getElementById('statusMessage');
-        const recordingIndicator = document.getElementById('recording-indicator');
+        const recordingDot = document.getElementById('recording-ind');
         const downloadButton = document.getElementById('downloadButton');
+        const saveLocalButton = document.getElementById('saveLocalButton');
+        const showSavedButton = document.getElementById('showSavedButton');
+        const savedPanel = document.getElementById('savedPanel');
+        const savedList = document.getElementById('savedList');
+        const closeSavedBtn = document.getElementById('closeSavedBtn');
+        const clearAllButton = document.getElementById('clearAllButton');
+        const storageWarning = document.getElementById('storageWarning');
+        const clearTransButton = document.getElementById('clearTransButton');
+        const exportAllBtn = document.getElementById('exportAll');
 
-        // Variabel untuk menyimpan status dan data
-        let mediaRecorder;
-        let speechRecognition;
+        // New DOM elements
+        const helpPanel = document.getElementById('helpPanel');
+        const closeHelpBtn = document.getElementById('closeHelpBtn');
+        const customModal = document.getElementById('customModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalActions = document.getElementById('modalActions');
+
+        // State
+        let mediaRecorder = null;
+        let speechRecognition = null;
         let isRecording = false;
+        let audioChunks = [];
+        let audioBlob = null;
         let finalTranscript = '';
-        let audioBlob;
+        let interimTranscript = '';
 
+        // SpeechRecognition support
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
-            statusMessage.textContent = 'Maaf, browser Anda tidak mendukung Speech Recognition.';
-            recordButton.disabled = true;
-            translateButton.disabled = true;
+            statusMessage.textContent = 'Browser tidak mendukung SpeechRecognition — transkripsi tidak tersedia.';
         }
 
-        // Fungsi untuk memulai perekaman dan transkripsi secara bersamaan
-        async function startRecording() {
+        // --- Custom Modal Functions ---
+        function hideModal() {
+            customModal.style.display = 'none';
+        }
+
+        function showAlert(title, message) {
+            modalTitle.textContent = title;
+            modalMessage.innerHTML = message;
+            modalActions.innerHTML = `<button class="btn bg-[color:var(--primary)] text-white px-4 py-2 rounded-full">Oke</button>`;
+            modalActions.querySelector('button').onclick = hideModal;
+            customModal.style.display = 'flex';
+        }
+
+        function showConfirm(title, message) {
+            return new Promise((resolve) => {
+                modalTitle.textContent = title;
+                modalMessage.innerHTML = message;
+                modalActions.innerHTML = `
+                    <button id="confirmCancel" class="btn bg-white border border-gray-200 text-slate-700 px-4 py-2 rounded-full">Batal</button>
+                    <button id="confirmOk" class="btn bg-[color:var(--danger)] text-white px-4 py-2 rounded-full">Oke</button>
+                `;
+
+                document.getElementById('confirmOk').onclick = () => {
+                    hideModal();
+                    resolve(true);
+                };
+                document.getElementById('confirmCancel').onclick = () => {
+                    hideModal();
+                    resolve(false);
+                };
+                customModal.style.display = 'flex';
+            });
+        }
+
+        // Utilities
+        function formatTimestamp(ts) {
+            const d = new Date(ts);
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
+                + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':' + String(d.getSeconds()).padStart(2, '0');
+        }
+
+        function blobToDataURL(blob) {
+            return new Promise((res, rej) => {
+                const r = new FileReader();
+                r.onload = () => res(r.result);
+                r.onerror = e => rej(e);
+                r.readAsDataURL(blob);
+            });
+        }
+
+        // LocalStorage helpers
+        function loadSavedRecordings() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                
-                speechRecognition = new SpeechRecognition();
-                speechRecognition.lang = 'id-ID';
-                speechRecognition.continuous = true;
-                speechRecognition.interimResults = true;
-                
-                finalTranscript = ''; // Reset transkripsi
-
-                // Event listener untuk MediaRecorder
-                let audioChunks = [];
-                mediaRecorder.ondataavailable = (event) => {
-                    audioChunks.push(event.data);
-                };
-
-                mediaRecorder.onstop = () => {
-                    audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                    const audioUrl = URL.createObjectURL(audioBlob);
-                    audioPlayback.src = audioUrl;
-                    audioPlayback.style.display = 'block';
-                    downloadButton.style.display = 'block';
-                    
-                    statusMessage.textContent = 'Perekaman selesai.';
-                    recordingIndicator.classList.remove('active');
-                };
-
-                // Event listener untuk SpeechRecognition (transkripsi)
-                speechRecognition.onresult = (event) => {
-                    let interimTranscript = '';
-                    for (let i = event.resultIndex; i < event.results.length; ++i) {
-                        if (event.results[i].isFinal) {
-                            finalTranscript += event.results[i][0].transcript;
-                        } else {
-                            interimTranscript += event.results[i][0].transcript;
-                        }
-                    }
-                    transcribedTextDiv.innerHTML = `<p>${finalTranscript || interimTranscript}</p>`;
-                    translateButton.disabled = false;
-                };
-
-                speechRecognition.onerror = (event) => {
-                    console.error('Speech recognition error:', event.error);
-                    statusMessage.textContent = 'Kesalahan transkripsi: ' + event.error;
-                };
-
-                // Event untuk menangani akhir sesi (misalnya, setelah 1 menit) dan memulai ulang
-                speechRecognition.onend = () => {
-                    if (isRecording) {
-                        speechRecognition.start(); // Mulai ulang secara otomatis
-                    }
-                };
-
-                // Mulai perekaman dan pengenalan suara
-                mediaRecorder.start();
-                speechRecognition.start();
-
-                isRecording = true;
-                recordButton.textContent = 'Berhenti Merekam';
-                recordButton.classList.remove('bg-blue-500');
-                recordButton.classList.add('bg-red-500');
-                statusMessage.textContent = 'Merekam... Silakan berbicara.';
-                recordingIndicator.classList.add('active');
-                downloadButton.style.display = 'none'; // Sembunyikan tombol unduh saat merekam
-
-            } catch (err) {
-                console.error('Error saat memulai perekaman:', err);
-                statusMessage.textContent = 'Tidak dapat mengakses mikrofon. Pastikan Anda memberikan izin.';
+                const raw = localStorage.getItem(STORAGE_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                console.warn(e);
+                return [];
+            }
+        }
+        function saveSavedRecordings(arr) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+                return true;
+            } catch (e) {
+                console.error('save error', e);
+                return false;
             }
         }
 
-        // Fungsi untuk menghentikan perekaman
-        function stopRecording() {
-            if (mediaRecorder && mediaRecorder.state === 'recording') {
-                mediaRecorder.stop();
-            }
-            if (speechRecognition) {
-                speechRecognition.stop();
-            }
-            isRecording = false;
-            recordButton.textContent = 'Mulai Merekam';
-            recordButton.classList.remove('bg-red-500');
-            recordButton.classList.add('bg-blue-500');
-            statusMessage.textContent = 'Perekaman dan transkripsi selesai.';
-        }
+        // Render saved list
+        function renderSavedList() {
+            const list = loadSavedRecordings();
+            savedList.innerHTML = '';
+            storageWarning.textContent = '';
 
-        // Event listener untuk tombol rekam
-        recordButton.addEventListener('click', () => {
-            if (isRecording) {
-                stopRecording();
-            } else {
-                startRecording();
-            }
-        });
-        
-        // Event listener untuk tombol unduh
-        downloadButton.addEventListener('click', () => {
-            if (audioBlob) {
-                const downloadLink = document.createElement('a');
-                downloadLink.href = URL.createObjectURL(audioBlob);
-                downloadLink.download = `rekaman-suara-${new Date().toISOString()}.wav`;
-                document.body.appendChild(downloadLink);
-                downloadLink.click();
-                document.body.removeChild(downloadLink);
-            }
-        });
-
-        // Fungsi untuk menerjemahkan teks menggunakan API
-        async function translateText() {
-            const textToTranslate = transcribedTextDiv.textContent.trim();
-            const targetLang = languageSelect.value;
-            translatedTextDiv.innerHTML = `<div class="loading-spinner mx-auto my-4"></div>`;
-            
-            if (!textToTranslate || textToTranslate === "Teks transkripsi akan muncul di sini setelah Anda selesai merekam.") {
-                translatedTextDiv.innerHTML = `<p class="text-gray-500 italic">Tidak ada teks untuk diterjemahkan.</p>`;
+            if (!list.length) {
+                savedList.innerHTML = '<p class="text-slate-500 italic">Belum ada rekaman tersimpan.</p>';
                 return;
             }
 
-            const payload = {
-                contents: [
-                    {
-                        parts: [
-                            { text: `Translate the following text into ${targetLang}: ${textToTranslate}` }
-                        ]
+            // newest first
+            list.slice().reverse().forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'p-3 border border-gray-100 rounded flex flex-col gap-2 bg-white';
+                el.innerHTML = `
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <div class="font-medium text-slate-800 truncate">${item.name}</div>
+            <div class="text-xs text-slate-500">${formatTimestamp(item.timestamp)} • ${item.duration ? item.duration + 's' : ''} • ${Math.round(item.size / 1024)} KB</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="playBtn btn bg-[color:var(--primary)] text-white text-sm py-1 px-3 rounded">Play</button>
+            <button class="dlBtn btn bg-white border border-gray-200 text-sm py-1 px-3 rounded">Unduh</button>
+            <button class="delBtn btn bg-[color:var(--danger)] text-white text-sm py-1 px-3 rounded">Hapus</button>
+          </div>
+        </div>
+        <div class="text-sm text-slate-700 truncate-2">${item.transcript || '<em class="text-slate-400">Tidak ada transkrip</em>'}</div>
+      `;
+
+                // wire events
+                el.querySelector('.playBtn').onclick = () => {
+                    audioPlayback.src = item.dataUrl; audioPlayback.style.display = 'block'; audioPlayback.play();
+                    statusMessage.textContent = `Memutar: ${item.name}`;
+                };
+                el.querySelector('.dlBtn').onclick = () => {
+                    const a = document.createElement('a'); a.href = item.dataUrl; a.download = `${item.name}.wav`; document.body.appendChild(a); a.click(); a.remove();
+                };
+                el.querySelector('.delBtn').onclick = async () => {
+                    if (await showConfirm('Konfirmasi Hapus', `Hapus rekaman "${item.name}"?`)) {
+                        let arr = loadSavedRecordings(); arr = arr.filter(i => i.id !== item.id); saveSavedRecordings(arr); renderSavedList();
                     }
-                ],
-                tools: [{ "google_search": {} }]
-            };
-            const apiKey = "";
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                };
 
+                savedList.appendChild(el);
+            });
+        }
+
+        // Toggle saved panel
+        showSavedButton.addEventListener('click', () => {
+            savedPanel.style.display = 'block';
+            renderSavedList();
+            savedPanel.scrollIntoView({ behavior: 'smooth' });
+        });
+        closeSavedBtn.addEventListener('click', () => {
+            savedPanel.style.display = 'none';
+        });
+        clearAllButton.addEventListener('click', async () => {
+            if (await showConfirm('Konfirmasi Hapus Semua', 'Hapus semua rekaman dari browser ini? Tindakan ini tidak dapat dibatalkan.')) {
+                localStorage.removeItem(STORAGE_KEY);
+                renderSavedList();
+                showAlert('Berhasil', 'Semua rekaman telah dihapus.');
+            }
+        });
+
+        // Export/Backup (.json)
+        exportAllBtn.addEventListener('click', () => {
+            const arr = loadSavedRecordings();
+            if (!arr.length) { showAlert('Info', 'Tidak ada rekaman untuk dibackup.'); return; }
+            const data = JSON.stringify(arr);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = `rekaman-backup-${new Date().toISOString()}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+            showAlert('Backup Berhasil', 'File backup (.json) telah diunduh.');
+        });
+
+        // Help Panel Toggle
+        closeHelpBtn.addEventListener('click', () => {
+            helpPanel.style.display = 'none';
+        });
+
+        // Recording logic
+        async function startRecording() {
             try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioChunks = [];
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                let startTime = Date.now();
 
-                if (!response.ok) {
-                    throw new Error(`API response was not ok: ${response.statusText}`);
+                // SpeechRecognition setup
+                if (SpeechRecognition) {
+                    speechRecognition = new SpeechRecognition();
+                    speechRecognition.lang = 'id-ID';
+                    speechRecognition.continuous = true;
+                    speechRecognition.interimResults = true;
+                    finalTranscript = ''; interimTranscript = '';
+                    speechRecognition.onresult = (ev) => {
+                        let interim = '';
+                        for (let i = ev.resultIndex; i < ev.results.length; ++i) {
+                            if (ev.results[i].isFinal) finalTranscript += ev.results[i][0].transcript + ' ';
+                            else interim += ev.results[i][0].transcript;
+                        }
+                        transcribedTextDiv.innerHTML = `<p>${(finalTranscript || interim) || '<em class="text-slate-400">Tidak ada transkrip</em>'}</p>`;
+                        translateButton.disabled = !((finalTranscript || interim).trim().length > 0);
+                    };
+                    speechRecognition.onerror = (e) => { console.warn('speech error', e); statusMessage.textContent = 'Kesalahan transkripsi: ' + (e.error || e.message); };
+                    speechRecognition.onend = () => { if (isRecording && speechRecognition) { try { speechRecognition.start(); } catch (e) { } } };
+                    try { speechRecognition.start(); } catch (e) { console.warn('start recognition failed', e); }
                 }
 
-                const result = await response.json();
-                const candidate = result.candidates?.[0];
-                const translated = candidate?.content?.parts?.[0]?.text;
+                mediaRecorder.onstop = async () => {
+                    audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const durationSec = Math.round((Date.now() - startTime) / 1000);
+                    const dataUrl = await blobToDataURL(audioBlob);
+                    audioPlayback.src = dataUrl; audioPlayback.style.display = 'block';
+                    downloadButton.style.display = 'inline-block';
+                    saveLocalButton.style.display = 'inline-block';
+                    document.body.classList.remove('is-recording');
+                    statusMessage.textContent = 'Perekaman selesai dan disimpan otomatis.';
+                    // Auto-save
+                    const item = {
+                        id: 'r' + Date.now(),
+                        name: `Rekaman - ${formatTimestamp(Date.now())}`,
+                        timestamp: Date.now(),
+                        duration: durationSec,
+                        size: audioBlob.size,
+                        transcript: finalTranscript.trim(),
+                        dataUrl
+                    };
+                    const arr = loadSavedRecordings(); arr.push(item);
+                    const ok = saveSavedRecordings(arr);
+                    if (!ok) storageWarning.textContent = 'Gagal menyimpan otomatis (quota mungkin penuh). Silakan unduh sebagai cadangan.';
+                    else storageWarning.textContent = '';
+                    renderSavedList();
+                };
 
-                if (translated) {
-                    translatedTextDiv.innerHTML = `<p>${translated}</p>`;
-                } else {
-                    translatedTextDiv.innerHTML = `<p class="text-gray-500 italic">Gagal menerjemahkan. Silakan coba lagi.</p>`;
-                }
-
-            } catch (error) {
-                console.error('Translation error:', error);
-                translatedTextDiv.innerHTML = `<p class="text-gray-500 italic">Terjadi kesalahan saat menerjemahkan. Periksa konsol untuk detail.</p>`;
+                mediaRecorder.start();
+                isRecording = true;
+                document.body.classList.add('is-recording');
+                recordLabel.textContent = 'Merekam... Klik lagi untuk berhenti';
+                recordButton.classList.add('bg-[color:var(--danger)]');
+                stopButton.classList.remove('hidden');
+                statusMessage.textContent = 'Merekam...';
+            } catch (err) {
+                console.error('startRecording error', err);
+                showAlert('Kesalahan', 'Tidak dapat mengakses mikrofon. Pastikan izin diberikan.');
             }
         }
 
-        // Event listener untuk tombol terjemahkan
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+            if (speechRecognition) { try { speechRecognition.stop(); } catch (e) { } speechRecognition = null; }
+            isRecording = false;
+            recordLabel.textContent = 'Mulai Merekam';
+            recordButton.classList.remove('bg-[color:var(--danger)]');
+            stopButton.classList.add('hidden');
+            translateButton.disabled = !((finalTranscript || '').trim().length > 0);
+        }
+
+        // Buttons
+        recordButton.addEventListener('click', () => { if (isRecording) stopRecording(); else startRecording(); });
+        stopButton.addEventListener('click', stopRecording);
+
+        // Download current audio (if any)
+        downloadButton.addEventListener('click', () => {
+            if (!audioPlayback.src) return;
+            const a = document.createElement('a'); a.href = audioPlayback.src; a.download = `rekaman-${new Date().toISOString()}.wav`; document.body.appendChild(a); a.click(); a.remove();
+        });
+
+        // Manual save (redundant since auto-save runs on stop)
+        saveLocalButton.addEventListener('click', async () => {
+            if (!audioBlob) { showAlert('Info', 'Belum ada rekaman.'); return; }
+            try {
+                const dataUrl = await blobToDataURL(audioBlob);
+                const item = {
+                    id: 'r' + Date.now(),
+                    name: `Rekaman - ${formatTimestamp(Date.now())}`,
+                    timestamp: Date.now(),
+                    duration: null,
+                    size: audioBlob.size,
+                    transcript: finalTranscript.trim(),
+                    dataUrl
+                };
+                const arr = loadSavedRecordings(); arr.push(item);
+                const ok = saveSavedRecordings(arr);
+                if (!ok) showAlert('Gagal Menyimpan', 'Gagal menyimpan (kuota mungkin penuh). Silakan unduh sebagai cadangan.');
+                else { renderSavedList(); showAlert('Berhasil', 'Tersimpan ke LocalStorage browser ini.'); }
+            } catch (e) { console.error(e); showAlert('Kesalahan', 'Gagal menyimpan: ' + e.message); }
+        });
+
+        // Clear transcription
+        clearTransButton.addEventListener('click', () => { finalTranscript = ''; interimTranscript = ''; transcribedTextDiv.innerHTML = '<p class="italic text-slate-400">Teks transkripsi dibersihkan.</p>'; translateButton.disabled = true; });
+
+        // Translate using Argos (primary) with fallback to Google Translate
+        async function translateText() {
+            const text = (transcribedTextDiv.textContent || '').trim();
+            const target = languageSelect.value;
+            if (!text) {
+                translatedTextDiv.innerHTML = '<p class="italic text-slate-400">Tidak ada teks untuk diterjemahkan.</p>';
+                return;
+            }
+
+            translateButton.disabled = true;
+            translateLoading.classList.remove('hidden');
+            translatedTextDiv.innerHTML = '<p class="italic text-slate-500">Menerjemahkan...</p>';
+
+            try {
+                // Coba API Argos terlebih dahulu
+                const payload = { q: text, source: 'auto', target, format: 'text' };
+                const res = await fetch(TRANSLATE_ENDPOINT, {
+                    method: 'POST',
+                    mode: 'cors', // Tambahkan mode CORS
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    const txt = await res.text();
+                    throw new Error(`${res.status}: ${txt}`);
+                }
+
+                const data = await res.json();
+                translatedTextDiv.innerHTML = `<p>${(data.translatedText || '').replace(/\n/g, '<br>') || '<em class="text-slate-400">Terjemahan kosong</em>'}</p>`;
+
+            } catch (err) {
+                console.error('Argos translate error:', err);
+                // Jika Argos gagal, coba Google Translate sebagai fallback
+                try {
+                    const url = `${GOOGLE_TRANSLATE_ENDPOINT}?client=gtx&sl=auto&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        mode: 'cors'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const translatedText = data[0].map(item => item[0]).join('');
+
+                    translatedTextDiv.innerHTML = `<p>${translatedText.replace(/\n/g, '<br>')}</p>`;
+                } catch (altErr) {
+                    console.error('Alternative translation failed:', altErr);
+                    translatedTextDiv.innerHTML = `<p class="italic text-red-600">Terjadi kesalahan saat menerjemahan. Silakan periksa koneksi internet Anda dan coba lagi.</p>`;
+                }
+            } finally {
+                translateLoading.classList.add('hidden');
+                translateButton.disabled = !((finalTranscript || '').trim().length > 0);
+            }
+        }
         translateButton.addEventListener('click', translateText);
+
+        // Startup: render saved preview (and info)
+        window.addEventListener('load', () => {
+            const arr = loadSavedRecordings();
+            if (arr.length) statusMessage.textContent = `${arr.length} rekaman tersimpan. Klik "Lihat Rekaman" untuk manajemen.`;
+
+            // Show help panel on first visit
+            if (!localStorage.getItem('hasVisitedBefore')) {
+                helpPanel.style.display = 'block';
+                helpPanel.scrollIntoView({ behavior: 'smooth' });
+                localStorage.setItem('hasVisitedBefore', 'true');
+            }
+
+            renderSavedList();
+        });
+
     </script>
 </body>
+
 </html>
