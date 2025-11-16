@@ -28,7 +28,8 @@
             font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
             background: linear-gradient(180deg, var(--bg) 0%, #f3f4f6 100%);
             margin: 0;
-            padding: 18px;
+            /* MOBILE OPTIMIZATION: Kurangi padding di body untuk layar kecil */
+            padding: 12px;
             -webkit-font-smoothing: antialiased;
             display: flex;
             align-items: flex-start;
@@ -41,7 +42,8 @@
             max-width: 900px;
             background: var(--card);
             border-radius: 14px;
-            padding: 18px;
+            /* MOBILE OPTIMIZATION: Kurangi padding di container utama untuk layar kecil */
+            padding: 16px;
             box-shadow: 0 10px 30px rgba(2, 6, 23, 0.06);
             border: 1px solid rgba(15, 23, 42, 0.04);
         }
@@ -95,6 +97,7 @@
 
         .truncate-2 {
             display: -webkit-box;
+            -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden
         }
@@ -165,8 +168,21 @@
             gap: 10px;
         }
 
-        /* responsive tweaks for desktop (wider screens keep one column but more padding) */
+        /* MOBILE OPTIMIZATION: Tombol di modal jadi full-width di layar kecil */
+        @media (max-width: 480px) {
+            .modal-actions {
+                flex-direction: column-reverse;
+            }
+
+            .modal-actions button {
+                width: 100%;
+            }
+        }
+
+        /* responsive tweaks for desktop */
         @media(min-width:768px) {
+
+            /* Kembalikan padding ke ukuran asli untuk desktop */
             body {
                 padding: 28px
             }
@@ -182,7 +198,7 @@
     <main class="app" id="appRoot" role="main" aria-label="Perekam dan Penerjemah">
         <header class="mb-4">
             <h1 class="text-2xl font-semibold text-slate-800">Perekam Suara & Penerjemah</h1>
-            <p class="text-sm text-slate-500 mt-1">Rekaman tersimpan lokal
+            <p class="text-sm text-slate-500 mt-1">Tema: <strong>Ungu Elegan</strong>. Rekaman tersimpan lokal
                 (LocalStorage).</p>
         </header>
 
@@ -226,13 +242,25 @@
                 </div>
             </div>
 
-            <p class="mt-3 text-xs text-slate-500">Catatan: LocalStorage memiliki batas.</p>
+            <p class="mt-3 text-xs text-slate-500">Catatan: LocalStorage memiliki batas. Untuk rekaman panjang gunakan
+                IndexedDB di masa depan.</p>
         </section>
 
         <!-- Transkripsi Card -->
         <section class="mb-5 p-4 rounded-lg border border-gray-100 bg-white">
             <div class="flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-slate-800">Hasil Transkripsi</h2>
+                <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                    Hasil Transkripsi
+                    <!-- TRANSCRIPTION FIX: Tambahkan ikon info untuk penjelasan -->
+                    <button id="transcriptionInfoBtn" class="text-slate-400 hover:text-slate-600"
+                        aria-label="Info transkripsi">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </button>
+                </h2>
                 <button id="clearTransButton" class="text-xs text-slate-500 hover:underline">Bersihkan</button>
             </div>
             <div id="transcribedText" class="mt-3 min-h-[120px] p-3 bg-gray-50 rounded text-slate-800">
@@ -315,8 +343,7 @@
                         <li>Ucapkan kata-kata yang ingin Anda rekam.</li>
                         <li>Klik lagi untuk berhenti. Hasil rekaman dan transkripsi akan muncul.</li>
                         <li>Anda bisa <strong>memutar ulang</strong>, <strong>mengunduh</strong>, atau
-                            <strong>menerjemahkan</strong> teksnya.
-                        </li>
+                            <strong>menerjemahkan</strong> teksnya.</li>
                         <li>Klik <strong>"Lihat Rekaman"</strong> untuk mengelola semua rekaman Anda.</li>
                     </ol>
                 </div>
@@ -342,14 +369,30 @@
                         <li><strong>Terjemahan:</strong> Terjemahkan teks ke berbagai bahasa dengan cepat.</li>
                     </ul>
                 </div>
+                <!-- TRANSCRIPTION FIX: Tambahkan bagian troubleshooting -->
+                <div>
+                    <h4 class="font-semibold mb-1 text-red-600">🔧 Troubleshooting: Transkripsi Tidak Muncul?</h4>
+                    <p class="text-slate-600">Jika fitur transkripsi tidak bekerja, terutama di HP, kemungkinan ada 2
+                        masalah utama:</p>
+                    <ol class="list-decimal list-inside mt-1 space-y-2 text-slate-600">
+                        <li><strong>Izin Mikrofon Ditolak:</strong> Pastikan Anda mengklik "Izinkan" saat browser
+                            meminta akses mikrofon. Periksa pengaturan privasi browser Anda.</li>
+                        <li><strong>Koneksi Tidak Aman (Paling Umum):</strong> Fitur ini <strong>WAJIB</strong> berjalan
+                            di lingkungan aman (HTTPS). Jika Anda membuka file langsung dari komputer (alamatnya dimulai
+                            dengan <code>file://</code>), fitur ini akan gagal.
+                            <br><strong>Solusi:</strong> Gunakan server lokal (seperti Live Server di VS Code) atau
+                            hosting file ini di platform seperti GitHub Pages, Netlify, atau Vercel agar memiliki alamat
+                            <code>https://</code>.
+                        </li>
+                    </ol>
+                </div>
             </div>
         </section>
 
         <footer class="mt-4 text-xs text-slate-500 text-center">
             <div class="mb-2">Key LocalStorage: <code>rekamanSuara</code></div>
-            <div class="font-semibold text-slate-700">Dibuat oleh <span class="text-[color:var(--primary)]">Alvansyah
-                    Wardhana</span> — Ini adalah karya pribadi, bukan hasil tiruan atau pengambilan kode dari orang
-                lain.
+            <div class="font-semibold text-slate-700">Dibuat oleh <span class="text-[color:var(--primary)]">Alvan Sheikh
+                    Wardana</span> — Ini adalah karya pribadi, bukan hasil tiruan atau pengambilan kode dari orang lain.
             </div>
         </footer>
     </main>
@@ -408,6 +451,7 @@
         const modalTitle = document.getElementById('modalTitle');
         const modalMessage = document.getElementById('modalMessage');
         const modalActions = document.getElementById('modalActions');
+        const transcriptionInfoBtn = document.getElementById('transcriptionInfoBtn');
 
         // State
         let mediaRecorder = null;
@@ -421,7 +465,7 @@
         // SpeechRecognition support
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
-            statusMessage.textContent = 'Browser tidak mendukung SpeechRecognition — transkripsi tidak tersedia.';
+            statusMessage.textContent = 'Browser ini tidak mendukung SpeechRecognition.';
         }
 
         // --- Custom Modal Functions ---
@@ -456,6 +500,20 @@
                 };
                 customModal.style.display = 'flex';
             });
+        }
+
+        // TRANSCRIPTION FIX: Fungsi khusus untuk modal info transkripsi
+        function showTranscriptionInfoModal() {
+            const title = 'Persyaratan Fitur Transkripsi';
+            const message = `
+                <p>Agar fitur transkripsi suara berkerja dengan baik, pastikan:</p>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Browser Anda mendukung <strong>SpeechRecognition</strong> (Chrome/Edge terbaik).</li>
+                    <li>Anda <strong>memberikan izin mikrofon</strong> saat diminta.</li>
+                    <li>Aplikasi dibuka melalui koneksi aman <strong>HTTPS</strong>, bukan <code>file://</code>. Jika dibuka dari file lokal, fitur ini tidak akan berfungsi.</li>
+                </ul>
+            `;
+            showAlert(title, message);
         }
 
         // Utilities
@@ -511,14 +569,14 @@
                 el.className = 'p-3 border border-gray-100 rounded flex flex-col gap-2 bg-white';
                 el.innerHTML = `
         <div class="flex items-start justify-between gap-3">
-          <div class="min-w-0">
+          <div class="min-w-0 flex-1">
             <div class="font-medium text-slate-800 truncate">${item.name}</div>
             <div class="text-xs text-slate-500">${formatTimestamp(item.timestamp)} • ${item.duration ? item.duration + 's' : ''} • ${Math.round(item.size / 1024)} KB</div>
           </div>
-          <div class="flex items-center gap-2">
-            <button class="playBtn btn bg-[color:var(--primary)] text-white text-sm py-1 px-3 rounded">Play</button>
-            <button class="dlBtn btn bg-white border border-gray-200 text-sm py-1 px-3 rounded">Unduh</button>
-            <button class="delBtn btn bg-[color:var(--danger)] text-white text-sm py-1 px-3 rounded">Hapus</button>
+          <div class="flex items-center gap-1">
+            <button class="playBtn btn bg-[color:var(--primary)] text-white text-xs py-1.5 px-2.5 rounded">Play</button>
+            <button class="dlBtn btn bg-white border border-gray-200 text-xs py-1.5 px-2.5 rounded">Unduh</button>
+            <button class="delBtn btn bg-[color:var(--danger)] text-white text-xs py-1.5 px-2.5 rounded">Hapus</button>
           </div>
         </div>
         <div class="text-sm text-slate-700 truncate-2">${item.transcript || '<em class="text-slate-400">Tidak ada transkrip</em>'}</div>
@@ -575,8 +633,17 @@
             helpPanel.style.display = 'none';
         });
 
+        // TRANSCRIPTION FIX: Tambahkan event listener untuk tombol info
+        transcriptionInfoBtn.addEventListener('click', showTranscriptionInfoModal);
+
         // Recording logic
         async function startRecording() {
+            // TRANSCRIPTION FIX: Pemeriksaan HTTPS yang lebih jelas
+            if (location.protocol === 'file:') {
+                showAlert('Koneksi Tidak Aman (HTTPS)', 'Fitur perekaman dan transkripsi memerlukan koneksi aman (HTTPS). Anda tidak bisa menggunakan fitur ini dengan membuka file secara langsung (file://). Silakan gunakan server lokal atau hosting.');
+                return;
+            }
+
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 audioChunks = [];
@@ -600,9 +667,23 @@
                         transcribedTextDiv.innerHTML = `<p>${(finalTranscript || interim) || '<em class="text-slate-400">Tidak ada transkrip</em>'}</p>`;
                         translateButton.disabled = !((finalTranscript || interim).trim().length > 0);
                     };
-                    speechRecognition.onerror = (e) => { console.warn('speech error', e); statusMessage.textContent = 'Kesalahan transkripsi: ' + (e.error || e.message); };
+                    speechRecognition.onerror = (e) => {
+                        console.warn('speech error', e);
+                        // TRANSCRIPTION FIX: Pesan error yang lebih spesifik
+                        if (e.error === 'not-allowed') {
+                            showAlert('Izin Ditolak', 'Akses mikrofon ditolak. Silakan periksa pengaturan izin browser Anda dan izinkan mikrofon untuk situs ini.');
+                        } else {
+                            statusMessage.textContent = 'Kesalahan transkripsi: ' + (e.error || e.message);
+                        }
+                    };
                     speechRecognition.onend = () => { if (isRecording && speechRecognition) { try { speechRecognition.start(); } catch (e) { } } };
-                    try { speechRecognition.start(); } catch (e) { console.warn('start recognition failed', e); }
+                    try {
+                        speechRecognition.start();
+                    } catch (e) {
+                        console.warn('start recognition failed', e);
+                        // TRANSCRIPTION FIX: Tangkap error saat start() dipanggil
+                        showAlert('Gagal Memulai Transkripsi', 'Tidak dapat memulai mesin transkripsi. Pastikan Anda menggunakan browser yang mendukung (seperti Chrome) dan membuka halaman ini melalui HTTPS.');
+                    }
                 }
 
                 mediaRecorder.onstop = async () => {
@@ -640,7 +721,12 @@
                 statusMessage.textContent = 'Merekam...';
             } catch (err) {
                 console.error('startRecording error', err);
-                showAlert('Kesalahan', 'Tidak dapat mengakses mikrofon. Pastikan izin diberikan.');
+                // TRANSCRIPTION FIX: Pesan error yang lebih jelas untuk mikrofon
+                if (err.name === 'NotAllowedError') {
+                    showAlert('Izin Mikrofon Diperlukan', 'Anda harus mengizinkan akses mikrofon untuk menggunakan fitur ini. Silakan segarkan halaman dan berikan izin saat diminta.');
+                } else {
+                    showAlert('Kesalahan', 'Tidak dapat mengakses mikrofon. Pastikan perangkat memiliki mikrofon dan izin telah diberikan.');
+                }
             }
         }
 
