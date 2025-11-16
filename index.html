@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Perekam & Penerjemah — Ungu (Mobile-first)</title>
+    <title>Perekam & Penerjemah</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -131,10 +131,15 @@
             background: var(--card);
             border-radius: 12px;
             padding: 24px;
-            max-width: 400px;
+            max-width: 500px;
+            /* Sedikit lebih lebar untuk menampung teks */
             width: 100%;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             animation: modalFadeIn 0.3s ease-out;
+            max-height: 80vh;
+            /* Batasi tinggi modal */
+            overflow-y: auto;
+            /* Tambahkan scroll jika konten terlalu panjang */
         }
 
         @keyframes modalFadeIn {
@@ -159,7 +164,7 @@
         .modal-message {
             color: #475569;
             margin-bottom: 20px;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         .modal-actions {
@@ -474,7 +479,7 @@
         }
 
         function showAlert(title, message) {
-            modalTitle.textContent = title;
+            modalTitle.innerHTML = title;
             modalMessage.innerHTML = message;
             modalActions.innerHTML = `<button class="btn bg-[color:var(--primary)] text-white px-4 py-2 rounded-full">Oke</button>`;
             modalActions.querySelector('button').onclick = hideModal;
@@ -638,9 +643,22 @@
 
         // Recording logic
         async function startRecording() {
-            // TRANSCRIPTION FIX: Pemeriksaan HTTPS yang lebih jelas
+            // TRANSCRIPTION FIX: Pemeriksaan HTTPS yang lebih jelas dan solutif
             if (location.protocol === 'file:') {
-                showAlert('Koneksi Tidak Aman (HTTPS)', 'Fitur perekaman dan transkripsi memerlukan koneksi aman (HTTPS). Anda tidak bisa menggunakan fitur ini dengan membuka file secara langsung (file://). Silakan gunakan server lokal atau hosting.');
+                const title = '⚠️ Aplikasi Harus Dijalankan di Server';
+                const message = `
+                    <p class="mb-3">Fitur transkripsi dan perekaman <strong>WAJIB</strong> dijalankan melalui koneksi aman (HTTPS). Membuka file langsung dari komputer (alamat <code>file://</code>) tidak akan berfungsi.</p>
+                    <p class="font-semibold mb-2">✅ Solusi Paling Mudah (Host Online Gratis):</p>
+                    <ol class="list-decimal list-inside space-y-1 text-sm mb-4">
+                        <li>Buka <a href="https://app.netlify.com/drop" target="_blank" class="text-blue-600 underline">Netlify Drop</a> di browser komputer Anda.</li>
+                        <li><strong>Drag dan drop</strong> seluruh folder proyek Anda ke halaman tersebut.</li>
+                        <li>Netlify akan memberikan Anda alamat website (contoh: <code>https://random-name.netlify.app</code>).</li>
+                        <li>Buka alamat tersebut di HP Anda. Semua fitur akan berjalan normal.</li>
+                    </ol>
+                    <p class="font-semibold">Solusi Alternatif (Server Lokal):</p>
+                    <p class="text-sm">Jika Anda hanya ingin mencoba di Wi-Fi rumah, Anda bisa menggunakan server lokal. Ini sedikit lebih teknis. <a href="https://www.google.com/search?q=how+to+run+local+web+server" target="_blank" class="text-blue-600 underline">Cari panduan "run local web server" di Google.</a></p>
+                `;
+                showAlert(title, message);
                 return;
             }
 
